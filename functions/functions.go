@@ -1,14 +1,33 @@
 package functions
 
 import (
-	"fmt"
+	"bytes"
+	"io"
+	"net/http"
 	"os"
 )
 
 func image_resize(path string) (string, error) {
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return "", fmt.Errorf("File is not exist")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
 	}
-	return "good", nil
+
+	req, err := http.NewRequest("POST", "https://api.tinify.com/shrink", bytes.NewBuffer(data))
+
+	req.SetBasicAuth("api", API)
+	req.Header.Set("Host", "api.tinify.com")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+
+	return string(body), nil
+
 }
