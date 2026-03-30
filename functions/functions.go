@@ -6,18 +6,9 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 )
-
-type FullResponse struct {
-	Location    string
-	ContentType string
-	Body        struct {
-		Input struct {
-			Size int    `json:"size"`
-			Type string `json:"type"`
-		} `json:"input"`
-	}
-}
 
 type BodyRequest struct {
 	Resize struct {
@@ -27,7 +18,7 @@ type BodyRequest struct {
 	} `json:"resize"`
 }
 
-func image_resize(path string) error {
+func image_resize(path string, w, h int) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -48,22 +39,19 @@ func image_resize(path string) error {
 	}
 	defer resp.Body.Close()
 
-	var full FullResponse
-	full.Location = resp.Header.Get("Location")
-	full.ContentType = resp.Header.Get("Content-Type")
-	json.NewDecoder(resp.Body).Decode(&full.Body)
+	loc := resp.Header.Get("Location")
 
 	var resize BodyRequest
 	resize.Resize.Method = "fit"
-	resize.Resize.Width = 600
-	resize.Resize.Height = 600
+	resize.Resize.Width = w
+	resize.Resize.Height = h
 
 	bodyBytes, err := json.Marshal(resize)
 	if err != nil {
 		return err
 	}
 
-	req, err = http.NewRequest("POST", full.Location, bytes.NewBuffer(bodyBytes))
+	req, err = http.NewRequest("POST", loc, bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		return err
 	}
@@ -79,7 +67,13 @@ func image_resize(path string) error {
 	}
 	defer resp.Body.Close()
 
-	out, err := os.Create("../data/panda_thumb.jpg")
+	outpath := filepath.Dir(path)
+	outfile := filepath.Base(path)
+	filename := strings.Split(outfile, ".")
+
+	fp := filepath.Join(outpath, filename[0]+"_thumb."+filename[1])
+
+	out, err := os.Create(fp)
 	if err != nil {
 		return err
 	}
