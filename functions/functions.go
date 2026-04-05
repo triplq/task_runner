@@ -18,7 +18,7 @@ type BodyRequest struct {
 	} `json:"resize"`
 }
 
-func image_resize(path string, w, h int) error {
+func Image_resize(path string, w, h int) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return err

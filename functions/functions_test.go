@@ -7,7 +7,7 @@ import (
 
 func TestResize(t *testing.T) {
 	t.Run("Check", func(t *testing.T) {
-		err := image_resize("../data/panda.jpg", 600, 600)
+		err := Image_resize("../data/panda.jpg", 600, 600)
 		fmt.Println(err)
 	})
 }
